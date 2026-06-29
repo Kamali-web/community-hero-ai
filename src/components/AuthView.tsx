@@ -230,7 +230,7 @@ export default function AuthView({ onAuthSuccess }: AuthViewProps) {
           <button
             type="button"
             onClick={handleGuestBypass}
-            className="w-full py-3 px-4 bg-emerald-950/20 border border-emerald-500/20 hover:border-emerald-500/40 text-emerald-300 hover:text-emerald-200 font-semibold rounded-xl transition-all flex items-center justify-center gap-2 text-xs cursor-pointer shadow-lg shadow-emerald-950/10"
+            className="w-full py-3.5 px-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold rounded-xl transition-all flex items-center justify-center gap-2 text-xs cursor-pointer shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 border border-emerald-400/20"
           >
             <span>⚡</span>
             <span>Developer Sandbox Guest Mode (Skip Sign-in)</span>

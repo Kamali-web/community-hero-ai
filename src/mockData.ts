@@ -148,7 +148,7 @@ export const INITIAL_ISSUES: CivicIssue[] = [
     locationName: 'Nehru Nagar Ring Road, Ward 2 (Opposite Apollo Hospital)',
     latitude: 12.9692,
     longitude: 77.5898,
-    imageUrl: 'https://images.unsplash.com/photo-1542013936693-8848e5740a7a?auto=format&fit=crop&w=800&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=800&q=80',
     voiceUrl: null,
     reportedBy: 'Priya Patel',
     reportedAt: '2026-06-26T04:10:00Z',

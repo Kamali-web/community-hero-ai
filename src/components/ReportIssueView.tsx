@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { ShieldAlert, Image, Mic, MapPin, Sparkles, AlertCircle, Loader2, UploadCloud, Info } from 'lucide-react';
+import { ShieldAlert, Image, Mic, MapPin, Sparkles, AlertCircle, Loader2, UploadCloud, Info, Volume2, Globe } from 'lucide-react';
 import { CivicIssue, IssueCategory } from '../types';
 import { APIProvider, Map, AdvancedMarker, Pin } from '@vis.gl/react-google-maps';
 
@@ -30,6 +30,8 @@ interface ReportIssueViewProps {
     aiAnalysis?: any;
   } | null;
   onClearPrefilledData?: () => void;
+  currentLanguage?: any;
+  t?: any;
 }
 
 export default function ReportIssueView({ 
@@ -40,7 +42,9 @@ export default function ReportIssueView({
   setSelectedIssueId,
   userProfile,
   prefilledData,
-  onClearPrefilledData
+  onClearPrefilledData,
+  currentLanguage = 'en',
+  t = (k: string) => k
 }: ReportIssueViewProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -83,14 +87,104 @@ export default function ReportIssueView({
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [recognition, setRecognition] = useState<any | null>(null);
 
-  // Initialize SpeechRecognition on load if available
+  // Accessible Multilingual Accessibility states
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [isPlayingGuide, setIsPlayingGuide] = useState(false);
+
+  const handlePlayVoiceGuide = () => {
+    if ('speechSynthesis' in window) {
+      if (isPlayingGuide) {
+        window.speechSynthesis.cancel();
+        setIsPlayingGuide(false);
+      } else {
+        const textToSpeak = t('speech_report_intro');
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        
+        const voices = window.speechSynthesis.getVoices();
+        let matchingVoice = voices.find(v => v.lang.startsWith(currentLanguage));
+        if (!matchingVoice && currentLanguage === 'hi') matchingVoice = voices.find(v => v.lang.includes('IN'));
+        if (matchingVoice) {
+          utterance.voice = matchingVoice;
+        }
+        utterance.lang = currentLanguage === 'hi' ? 'hi-IN' : currentLanguage === 'ta' ? 'ta-IN' : currentLanguage === 'kn' ? 'kn-IN' : currentLanguage === 'te' ? 'te-IN' : 'en-US';
+        utterance.rate = 0.9;
+        
+        utterance.onend = () => {
+          setIsPlayingGuide(false);
+        };
+        utterance.onerror = () => {
+          setIsPlayingGuide(false);
+        };
+        
+        setIsPlayingGuide(true);
+        window.speechSynthesis.speak(utterance);
+      }
+    } else {
+      alert('Text-to-speech is not supported in this browser.');
+    }
+  };
+
+  const handleTranslateDescription = async () => {
+    if (!description.trim()) return;
+    setIsTranslating(true);
+    try {
+      const res = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: description })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.translatedText) {
+          setDescription(data.translatedText);
+          // Auto-translate title too if title is short
+          if (title && currentLanguage !== 'en') {
+            const titleRes = await fetch('/api/translate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text: title })
+            });
+            if (titleRes.ok) {
+              const titleData = await titleRes.json();
+              if (titleData.translatedText) {
+                setTitle(titleData.translatedText);
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Translation failed', e);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
+  // Stop synthesis on unmount to prevent lingering audio output
+  React.useEffect(() => {
+    return () => {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  // Initialize SpeechRecognition dynamically adjusted to currentLanguage selection
   React.useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
       const rec = new SpeechRecognition();
       rec.continuous = true;
       rec.interimResults = true;
-      rec.lang = 'en-US';
+      
+      const selectedLang = currentLanguage || 'en';
+      let speechLang = 'en-US';
+      if (selectedLang === 'hi') speechLang = 'hi-IN';
+      else if (selectedLang === 'ta') speechLang = 'ta-IN';
+      else if (selectedLang === 'kn') speechLang = 'kn-IN';
+      else if (selectedLang === 'te') speechLang = 'te-IN';
+      
+      rec.lang = speechLang;
       
       rec.onresult = (event: any) => {
         let interimTranscript = '';
@@ -118,7 +212,7 @@ export default function ReportIssueView({
       
       setRecognition(rec);
     }
-  }, []);
+  }, [currentLanguage]);
 
   // Preset Sample Issues for quick testing (very friendly UX!)
   const samplePresets = [
@@ -138,7 +232,7 @@ export default function ReportIssueView({
       loc: '244 Nehru Nagar Ring Road, Ward 2',
       lat: '12.9692',
       lng: '77.5898',
-      img: 'https://images.unsplash.com/photo-1542013936693-8848e5740a7a?auto=format&fit=crop&w=400&q=80'
+      img: 'https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=400&q=80'
     },
     {
       title: 'Hazardous chemicals and battery piles in park',
@@ -487,9 +581,25 @@ export default function ReportIssueView({
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="max-w-4xl mx-auto space-y-8">
-        <div>
-          <h2 className="font-display font-bold text-3xl text-white">File Incident Report</h2>
-          <p className="text-xs text-gray-400 font-mono tracking-wide">AI-POWERED ANALYSIS & AUTOMATED DEPT ROUTING</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 className="font-display font-bold text-3xl text-white">{t('report_title')}</h2>
+            <p className="text-xs text-gray-400 font-mono tracking-wide uppercase">AI-POWERED ANALYSIS & AUTOMATED DEPT ROUTING</p>
+          </div>
+          
+          {/* Audio Read-Aloud Guide for illiterate/uneducated accessibility */}
+          <button
+            type="button"
+            onClick={handlePlayVoiceGuide}
+            className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-xs transition-all cursor-pointer shadow-lg shrink-0 ${
+              isPlayingGuide
+                ? 'bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20'
+                : 'bg-indigo-600/20 border-indigo-500/30 text-indigo-300 hover:bg-indigo-600/30'
+            }`}
+          >
+            <Volume2 className="w-4 h-4" />
+            <span>{isPlayingGuide ? t('stop_audio') : t('tap_to_listen')}</span>
+          </button>
         </div>
 
         {/* Preset Testing helper */}
@@ -523,32 +633,41 @@ export default function ReportIssueView({
               
               {/* Category Select */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-300 font-mono">INCIDENT CLASSIFICATION</label>
+                <label className="text-xs font-semibold text-gray-300 font-mono">{t('field_category').toUpperCase()}</label>
                 <div className="flex flex-wrap gap-2">
-                  {(['Roads', 'Water', 'Waste', 'Lighting', 'Safety'] as IssueCategory[]).map((cat) => (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => setCategory(cat)}
-                      className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all text-center flex-1 sm:flex-initial min-w-[75px] ${
-                        category === cat 
-                          ? 'bg-brand-primary/20 text-white border-brand-primary/40' 
-                          : 'bg-slate-950 text-gray-400 border-white/5 hover:bg-slate-900'
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
+                  {(['Roads', 'Water', 'Waste', 'Lighting', 'Safety'] as IssueCategory[]).map((cat) => {
+                    let catLabel = cat;
+                    if (cat === 'Roads') catLabel = t('category_roads');
+                    else if (cat === 'Water') catLabel = t('category_water');
+                    else if (cat === 'Waste') catLabel = t('category_waste');
+                    else if (cat === 'Lighting') catLabel = t('category_lighting');
+                    else if (cat === 'Safety') catLabel = t('category_safety');
+                    
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setCategory(cat)}
+                        className={`py-2.5 px-3.5 rounded-xl text-xs font-bold border transition-all text-center flex-1 sm:flex-initial min-w-[85px] cursor-pointer ${
+                          category === cat 
+                            ? 'bg-brand-primary/20 text-white border-brand-primary/40 glow-primary' 
+                            : 'bg-slate-950 text-gray-400 border-white/5 hover:bg-slate-900 hover:text-white'
+                        }`}
+                      >
+                        {catLabel}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* Title */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-300 font-mono">INCIDENT HEADING *</label>
+                <label className="text-xs font-semibold text-gray-300 font-mono">{t('field_title')} *</label>
                 <input 
                   type="text" 
                   required
-                  placeholder="e.g. Major water mains rupture flooding Oakwood entrance"
+                  placeholder={t('field_title_placeholder')}
                   value={title}
                   onChange={(e) => { setTitle(e.target.value); setAiPreview(null); }}
                   className="w-full bg-slate-950 border border-white/5 focus:border-brand-primary/30 rounded-xl p-3 text-sm text-white focus:outline-none"
@@ -557,20 +676,20 @@ export default function ReportIssueView({
 
               {/* Description */}
               <div className="space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs font-semibold text-gray-300 font-mono">DESCRIPTION & IMPACT DETAILS *</label>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                  <label className="text-xs font-semibold text-gray-300 font-mono">{t('field_desc')} *</label>
                   <div className="flex items-center gap-3">
                     <button
                       type="button"
                       onClick={handleToggleVoiceRecording}
-                      className={`flex items-center gap-1 text-[10px] font-bold font-mono px-2 py-1 rounded-md border transition-all ${
+                      className={`flex items-center gap-1.5 text-[10px] font-bold font-mono px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
                         voiceRecording 
-                          ? 'bg-red-500/10 border-red-500/30 text-red-400 animate-pulse' 
-                          : 'bg-brand-primary/5 hover:bg-brand-primary/15 border-brand-primary/20 text-brand-primary'
+                          ? 'bg-red-500/20 border-red-500/40 text-red-300 animate-pulse' 
+                          : 'bg-brand-primary/10 hover:bg-brand-primary/20 border-brand-primary/25 text-brand-primary'
                       }`}
                     >
-                      <Mic className="w-3 h-3 animate-bounce" />
-                      {voiceRecording ? '🎙️ STOP & SAVE VOICE' : '🎙️ START VOICE REPORT'}
+                      <Mic className="w-3 h-3" />
+                      {voiceRecording ? t('stop_speaking') : t('start_speaking')}
                     </button>
                     
                     <button
@@ -583,6 +702,20 @@ export default function ReportIssueView({
                     </button>
                   </div>
                 </div>
+
+                {/* Speech recording guidance banner for lower-literacy/uneducated users */}
+                {voiceRecording && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl space-y-1 text-xs text-red-400 animate-pulse">
+                    <div className="font-bold flex items-center gap-1.5">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>{t('transcribing')}</span>
+                    </div>
+                    <p className="text-[10px] text-red-400/80 font-mono">
+                      {t('voice_transcribe_instructions')}
+                    </p>
+                  </div>
+                )}
+
                 {voiceUrl && (
                   <div className="p-2.5 bg-slate-950 border border-brand-primary/20 rounded-xl flex items-center gap-3 mb-2 animate-fadeIn">
                     <div className="w-6 h-6 rounded-lg bg-brand-primary/10 flex items-center justify-center text-brand-primary shrink-0">
@@ -601,14 +734,39 @@ export default function ReportIssueView({
                     </button>
                   </div>
                 )}
+
                 <textarea 
                   rows={4}
                   required
-                  placeholder="Describe the physical state, proximity to schools or hospitals, and how many households are affected..."
+                  placeholder={t('field_desc_placeholder')}
                   value={description}
                   onChange={(e) => { setDescription(e.target.value); setAiPreview(null); }}
-                  className="w-full bg-slate-950 border border-white/5 focus:border-brand-primary/30 rounded-xl p-3 text-sm text-white focus:outline-none"
+                  className="w-full bg-slate-950 border border-white/5 focus:border-brand-primary/30 rounded-xl p-3 text-sm text-white focus:outline-none leading-relaxed"
                 />
+
+                {/* Translate to English Button for authorities */}
+                {description && currentLanguage !== 'en' && (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      disabled={isTranslating}
+                      onClick={handleTranslateDescription}
+                      className="text-xs bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm disabled:opacity-50"
+                    >
+                      {isTranslating ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" />
+                          <span>{t('translating')}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Globe className="w-3.5 h-3.5 text-indigo-400" />
+                          <span>{t('translate_to_english')}</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Location */}

@@ -54,31 +54,97 @@ body {
   color: #0f172a !important;
 }
 
-.theme-light .bg-slate-950,
-.theme-light aside,
-.theme-light .bg-slate-900 {
+.theme-light .bg-slate-900,
+.theme-light .bg-brand-card,
+.theme-light aside {
   background-color: #ffffff !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02) !important;
+}
+
+.theme-light .bg-slate-950,
+.theme-light .bg-brand-bg {
+  background-color: #f1f5f9 !important;
   color: #0f172a !important;
 }
 
 .theme-light .glass {
-  background: rgba(255, 255, 255, 0.85) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
   border-color: rgba(0, 0, 0, 0.08) !important;
   color: #0f172a !important;
   backdrop-filter: blur(12px) !important;
 }
 
+/* Light mode slate transparency splits to separate depth and contrast */
+.theme-light .bg-slate-900\/95,
+.theme-light .bg-slate-900\/90,
+.theme-light .bg-slate-900\/85,
+.theme-light .bg-slate-900\/80,
+.theme-light .bg-slate-900\/75,
+.theme-light .bg-slate-900\/70,
+.theme-light .bg-slate-900\/65,
 .theme-light .bg-slate-900\/60,
-.theme-light .bg-slate-950\/40,
-.theme-light .bg-slate-950\/60,
-.theme-light .bg-slate-950\/50,
+.theme-light .bg-slate-900\/55,
 .theme-light .bg-slate-900\/50,
-.theme-light .bg-slate-900\/40 {
-  background-color: rgba(241, 245, 249, 0.8) !important;
+.theme-light .bg-slate-900\/45,
+.theme-light .bg-slate-900\/40,
+.theme-light .bg-slate-900\/35,
+.theme-light .bg-slate-900\/30,
+.theme-light .bg-slate-900\/25,
+.theme-light .bg-slate-900\/20,
+.theme-light .bg-slate-900\/15,
+.theme-light .bg-slate-900\/10,
+.theme-light .bg-slate-900\/5 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
   color: #0f172a !important;
-  border-color: rgba(0, 0, 0, 0.06) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03) !important;
 }
 
+.theme-light .bg-slate-950\/95,
+.theme-light .bg-slate-950\/90,
+.theme-light .bg-slate-950\/85,
+.theme-light .bg-slate-950\/80,
+.theme-light .bg-slate-950\/75,
+.theme-light .bg-slate-950\/70,
+.theme-light .bg-slate-950\/65,
+.theme-light .bg-slate-950\/60,
+.theme-light .bg-slate-950\/55,
+.theme-light .bg-slate-950\/50,
+.theme-light .bg-slate-950\/45,
+.theme-light .bg-slate-950\/40,
+.theme-light .bg-slate-950\/35,
+.theme-light .bg-slate-950\/30,
+.theme-light .bg-slate-950\/25,
+.theme-light .bg-slate-950\/20,
+.theme-light .bg-slate-950\/15,
+.theme-light .bg-slate-950\/10,
+.theme-light .bg-slate-950\/5 {
+  background-color: rgba(241, 245, 249, 0.95) !important;
+  color: #0f172a !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Ensure buttons and badges with solid dark backgrounds keep white text in light mode */
+.theme-light button.bg-indigo-600,
+.theme-light button.bg-indigo-500,
+.theme-light button.bg-gradient-to-r,
+.theme-light button.bg-gradient-to-br,
+.theme-light button.bg-violet-600,
+.theme-light button.bg-brand-primary,
+.theme-light button.bg-brand-secondary,
+.theme-light .bg-indigo-600,
+.theme-light .bg-indigo-600 .text-white,
+.theme-light .bg-indigo-600 svg,
+.theme-light .bg-brand-primary .text-white,
+.theme-light .bg-brand-primary svg,
+.theme-light button .text-white,
+.theme-light button svg,
+.theme-light .text-white-force {
+  color: #ffffff !important;
+}
+
+/* Ensure headings and common dark texts are fully black/charcoal */
 .theme-light .text-white,
 .theme-light h1,
 .theme-light h2,
@@ -86,28 +152,133 @@ body {
 .theme-light h4,
 .theme-light h5,
 .theme-light h6,
+.theme-light .text-slate-50,
 .theme-light .text-slate-100,
-.theme-light .text-slate-200 {
+.theme-light .text-slate-200,
+.theme-light .text-gray-50,
+.theme-light .text-gray-100,
+.theme-light .text-gray-200,
+.theme-light .text-zinc-100,
+.theme-light .text-zinc-200 {
   color: #0f172a !important;
 }
 
-.theme-light .text-gray-400,
+/* Ensure secondary/muted slate and gray labels are medium-dark charcoal */
 .theme-light .text-slate-300,
-.theme-light .text-slate-400 {
+.theme-light .text-slate-400,
+.theme-light .text-gray-300,
+.theme-light .text-gray-400,
+.theme-light .text-zinc-300,
+.theme-light .text-zinc-400 {
   color: #334155 !important;
 }
 
-.theme-light .text-gray-500 {
-  color: #64748b !important;
+/* Ensure metadata/very muted labels are readable dark gray */
+.theme-light .text-slate-500,
+.theme-light .text-gray-500,
+.theme-light .text-zinc-500 {
+  color: #57657a !important;
 }
 
+/* Color accents adjusted for high contrast on light background */
+.theme-light .text-brand-primary,
+.theme-light .text-indigo-400,
+.theme-light .text-indigo-300 {
+  color: #4f46e5 !important;
+}
+
+.theme-light .text-brand-secondary,
+.theme-light .text-purple-400,
+.theme-light .text-violet-400 {
+  color: #7c3aed !important;
+}
+
+.theme-light .text-cyan-400,
+.theme-light .text-cyan-300 {
+  color: #0e7490 !important;
+}
+
+.theme-light .text-teal-400,
+.theme-light .text-teal-300 {
+  color: #0d9488 !important;
+}
+
+.theme-light .text-emerald-400,
+.theme-light .text-emerald-300,
+.theme-light .text-green-400,
+.theme-light .text-brand-success {
+  color: #059669 !important;
+}
+
+.theme-light .text-amber-400,
+.theme-light .text-amber-300,
+.theme-light .text-yellow-400,
+.theme-light .text-brand-warning {
+  color: #b45309 !important;
+}
+
+.theme-light .text-rose-400,
+.theme-light .text-rose-300,
+.theme-light .text-red-400,
+.theme-light .text-brand-danger {
+  color: #dc2626 !important;
+}
+
+/* Form input, select, textarea elements in light mode */
+.theme-light input, 
+.theme-light select, 
+.theme-light textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+.theme-light input::placeholder, 
+.theme-light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Borders adjustment */
 .theme-light .border-white\/5,
-.theme-light .border-white\/10 {
-  border-color: rgba(0, 0, 0, 0.08) !important;
+.theme-light .border-white\/10,
+.theme-light .border-slate-800,
+.theme-light .border-slate-800\/60,
+.theme-light .border-white\/20 {
+  border-color: rgba(0, 0, 0, 0.1) !important;
 }
 
-.theme-light .border-b-white\/5 {
-  border-bottom-color: rgba(0, 0, 0, 0.08) !important;
+.theme-light .border-b-white\/5,
+.theme-light .border-b-white\/10 {
+  border-bottom-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.theme-light .border-t-white\/5,
+.theme-light .border-t-white\/10 {
+  border-top-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Button & interactive badge improvements */
+.theme-light button.bg-slate-900,
+.theme-light button.bg-slate-950,
+.theme-light button.bg-slate-900\/50,
+.theme-light button.bg-slate-950\/50 {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.theme-light button.bg-slate-900:hover,
+.theme-light button.bg-slate-950:hover {
+  background-color: #e2e8f0 !important;
+}
+
+/* Table header and row legibility */
+.theme-light th,
+.theme-light td {
+  color: #0f172a !important;
+}
+
+.theme-light tr {
+  border-bottom-color: rgba(0, 0, 0, 0.1) !important;
 }
 
 /* ECLIPSE DARK OVERRIDES */

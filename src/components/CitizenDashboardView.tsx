@@ -18,6 +18,8 @@ interface CitizenDashboardViewProps {
   onEarnPoints?: (pts: number) => void;
   userProfile?: any;
   onIssueReported?: (newIssue: CivicIssue) => void;
+  currentLanguage?: any;
+  t?: any;
 }
 
 export default function CitizenDashboardView({ 
@@ -29,7 +31,9 @@ export default function CitizenDashboardView({
   kpiStats,
   onEarnPoints,
   userProfile,
-  onIssueReported
+  onIssueReported,
+  currentLanguage = 'en',
+  t = (k: string) => k
 }: CitizenDashboardViewProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [highRiskOnly, setHighRiskOnly] = useState<boolean>(false);
@@ -354,23 +358,23 @@ export default function CitizenDashboardView({
       {/* Dynamic Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="font-display font-bold text-3xl text-white">Citizen Command Center</h2>
-          <p className="text-xs text-gray-400 font-mono tracking-wide uppercase">Aegis Smart City • Ward 2 District Feed</p>
+          <h2 className="font-display font-bold text-3xl text-white">{t('feed_title')}</h2>
+          <p className="text-xs text-gray-400 font-mono tracking-wide uppercase">{t('feed_desc')}</p>
         </div>
         <div className="flex gap-3">
           <button
             onClick={() => setCurrentTab('report')}
-            className="px-4 py-2 bg-brand-primary text-white text-xs font-semibold rounded-xl hover:bg-brand-primary/90 hover:scale-[1.01] transition-all glow-primary flex items-center gap-1.5"
+            className="px-4 py-2 bg-brand-primary text-white text-xs font-semibold rounded-xl hover:bg-brand-primary/90 hover:scale-[1.01] transition-all glow-primary flex items-center gap-1.5 cursor-pointer"
           >
             <ShieldAlert className="w-3.5 h-3.5" />
-            Report Infrastructure Incident
+            {t('report_incident')}
           </button>
           <button
             onClick={() => setCurrentTab('gpt')}
-            className="px-4 py-2 bg-slate-900 text-white text-xs font-semibold rounded-xl border border-white/10 hover:bg-slate-800 transition-all flex items-center gap-1.5"
+            className="px-4 py-2 bg-slate-900 text-white text-xs font-semibold rounded-xl border border-white/10 hover:bg-slate-800 transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <MessageSquare className="w-3.5 h-3.5 text-brand-secondary" />
-            CivicGPT Assistant
+            {t('civic_gpt')}
           </button>
         </div>
       </div>
@@ -452,19 +456,29 @@ export default function CitizenDashboardView({
             {/* Quick Interactive Filters */}
             <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between bg-slate-950/60 p-3 rounded-2xl border border-white/5">
               <div className="flex flex-wrap gap-1.5">
-                {['All', 'Roads', 'Water', 'Waste', 'Lighting', 'Safety'].map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold tracking-tight transition-all cursor-pointer ${
-                      selectedCategory === cat
-                        ? 'bg-brand-primary text-white font-bold'
-                        : 'bg-slate-900 text-gray-400 hover:text-white hover:bg-slate-800'
-                    }`}
-                  >
-                    {cat === 'All' ? 'ALL' : cat.toUpperCase()}
-                  </button>
-                ))}
+                {['All', 'Roads', 'Water', 'Waste', 'Lighting', 'Safety'].map((cat) => {
+                  let label = cat.toUpperCase();
+                  if (cat === 'All') label = t('filter_all').toUpperCase();
+                  else if (cat === 'Roads') label = t('category_roads').toUpperCase();
+                  else if (cat === 'Water') label = t('category_water').toUpperCase();
+                  else if (cat === 'Waste') label = t('category_waste').toUpperCase();
+                  else if (cat === 'Lighting') label = t('category_lighting').toUpperCase();
+                  else if (cat === 'Safety') label = t('category_safety').toUpperCase();
+
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold tracking-tight transition-all cursor-pointer ${
+                        selectedCategory === cat
+                          ? 'bg-brand-primary text-white font-bold'
+                          : 'bg-slate-900 text-gray-400 hover:text-white hover:bg-slate-800'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* High Risk Filter Toggle */}
@@ -515,10 +529,15 @@ export default function CitizenDashboardView({
                   <div className="space-y-1.5 flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${getCategoryColor(issue.category)}`}>
-                        {issue.category.toUpperCase()}
+                        {issue.category === 'Roads' ? t('category_roads').toUpperCase() :
+                         issue.category === 'Water' ? t('category_water').toUpperCase() :
+                         issue.category === 'Waste' ? t('category_waste').toUpperCase() :
+                         issue.category === 'Lighting' ? t('category_lighting').toUpperCase() :
+                         issue.category === 'Safety' ? t('category_safety').toUpperCase() :
+                         issue.category.toUpperCase()}
                       </span>
                       <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${getStatusColor(issue.status)}`}>
-                        {issue.status.toUpperCase()}
+                        {t(`filter_${issue.status.toLowerCase().replace(' ', '')}`).toUpperCase()}
                       </span>
                       {issue.severity === 'Critical' && (
                         <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-brand-danger/25 text-brand-danger border border-brand-danger/35 uppercase whitespace-nowrap">
@@ -541,22 +560,22 @@ export default function CitizenDashboardView({
                   {/* Upvotes (Verification) */}
                   <button 
                     onClick={() => handleLocalUpvote(issue.id)}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all justify-center w-full ${
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all justify-center w-full cursor-pointer ${
                       issue.userUpvoted 
                         ? 'bg-brand-primary/20 text-white border-brand-primary/30 glow-primary' 
                         : 'bg-slate-950 text-gray-400 border-white/5 hover:text-white hover:bg-slate-900'
                     }`}
                   >
                     <ArrowUp className={`w-3.5 h-3.5 shrink-0 ${issue.userUpvoted ? 'animate-bounce' : ''}`} />
-                    <span>{issue.upvotes} Verify</span>
+                    <span>{issue.upvotes} {t('button_verify')}</span>
                   </button>
 
                   <button 
                     onClick={() => handleViewDetails(issue.id)}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-slate-900 border border-white/10 text-xs font-medium text-white hover:bg-slate-800 rounded-xl justify-center w-full transition-all"
+                    className="flex items-center gap-1.5 px-3 py-2 bg-slate-900 border border-white/10 text-xs font-medium text-white hover:bg-slate-800 rounded-xl justify-center w-full transition-all cursor-pointer"
                   >
                     <Eye className="w-3.5 h-3.5 text-brand-secondary shrink-0" />
-                    <span>Details</span>
+                    <span>{t('button_details').split(' ')[0]}</span>
                   </button>
                 </div>
               </div>

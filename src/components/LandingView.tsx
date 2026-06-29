@@ -6,16 +6,20 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { ShieldAlert, Cpu, Heart, CheckCircle2, TrendingUp, Sparkles, Users, ArrowRight } from 'lucide-react';
+import AuthView from './AuthView';
 
 interface LandingViewProps {
   setCurrentTab: (tab: string) => void;
   kpiStats: any;
+  isGuest?: boolean;
+  onAuthSuccess?: (user: any) => void;
+  onGoToAuth?: () => void;
 }
 
-export default function LandingView({ setCurrentTab, kpiStats }: LandingViewProps) {
+export default function LandingView({ setCurrentTab, kpiStats, isGuest = false, onAuthSuccess, onGoToAuth }: LandingViewProps) {
   const stats = [
     { label: 'Active Reports', value: kpiStats.activeReports, icon: ShieldAlert, color: 'text-brand-warning bg-brand-warning/10' },
-    { label: 'Resolved Issues', value: kpiStats.resolvedIssues, icon: CheckCircle2, color: 'text-brand-success bg-brand-success/10' },
+    { label: 'Resolved Issues', value: kpiStats.resolvedIssues, icon: CheckCircle2, color: 'text-indigo-400 bg-indigo-400/10' },
     { label: 'Estimated Citizens Benefited', value: kpiStats.citizensBenefited, icon: Users, color: 'text-brand-primary bg-brand-primary/10' },
     { label: 'Water Saved (Liters)', value: kpiStats.waterSavedLiters, icon: TrendingUp, color: 'text-cyan-400 bg-cyan-400/10' }
   ];
@@ -48,56 +52,81 @@ export default function LandingView({ setCurrentTab, kpiStats }: LandingViewProp
     }
   ];
 
+  const handleTabNavigation = (tab: string) => {
+    if (isGuest) {
+      if (onGoToAuth) {
+        onGoToAuth();
+      }
+    } else {
+      setCurrentTab(tab);
+    }
+  };
+
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-24">
       {/* Hero Section */}
-      <section className="text-center space-y-8 py-12 relative">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-72 bg-brand-primary/10 rounded-full blur-3xl -z-10" />
+      <section className="py-12 relative flex flex-col items-center text-center">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl -z-10 animate-pulse duration-5000" />
         
+        {/* Centered Pill Badge */}
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-900 border border-white/5 rounded-full text-xs text-brand-primary font-semibold font-mono"
+          className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-500/15 border border-indigo-500/30 rounded-full text-xs text-indigo-400 font-semibold font-mono mb-6"
         >
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>V2.5 SMART CITIZEN SUPPORT ENGINE</span>
+          <span className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse" />
+          <span>Aegis Shield AI 1.0 is live</span>
         </motion.div>
 
+        {/* High-Impact Tagline */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.05 }}
+          className="text-indigo-400 font-mono text-xs sm:text-sm tracking-[0.25em] uppercase font-bold mb-6"
+        >
+          Predict. Prioritize. Resolve.
+        </motion.div>
+
+        {/* High-Impact Main Title */}
         <motion.h1 
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.1 }}
-          className="font-display font-extrabold text-4xl sm:text-6xl md:text-7xl tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-gray-500 max-w-4xl mx-auto"
+          className="font-display font-black text-4xl sm:text-5xl md:text-6xl tracking-tight leading-[1.15] max-w-5xl mx-auto text-white"
         >
-          Predict. Prioritize. <span className="text-brand-primary text-glow">Resolve.</span>
+          Your community becomes a <br />
+          <span className="text-indigo-400 text-glow inline-block mt-3 font-black">living sanctuary.</span>
         </motion.h1>
 
+        {/* Clean, descriptive subtitle */}
         <motion.p 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="text-gray-400 text-sm sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed"
+          className="text-slate-400 text-sm sm:text-base md:text-lg max-w-3xl mx-auto leading-relaxed mt-6"
         >
-          Transform how you report local issues. Helping citizens take action and authorities solve street problems faster using smart AI helpers.
+          Citizens don't need another unresolved complaint list. You need an active system that directly monitors street health, estimates road and surface repairs with AI, and visualizes civic growth through a digital twin map.
         </motion.p>
 
+        {/* Hero Actions */}
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="flex flex-wrap items-center justify-center gap-4 pt-4"
+          className="flex flex-wrap items-center justify-center gap-4 pt-8"
         >
           <button 
-            onClick={() => setCurrentTab('report')}
-            className="px-6 py-3 bg-brand-primary text-white text-sm font-semibold rounded-xl hover:bg-brand-primary/90 hover:scale-[1.02] transition-all glow-primary flex items-center gap-2"
+            onClick={() => handleTabNavigation('report')}
+            className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/20 hover:scale-[1.02] flex items-center gap-2 cursor-pointer border border-indigo-400/20"
           >
-            Report Issue
+            Enter Citizen Hub
             <ArrowRight className="w-4 h-4" />
           </button>
           <button 
-            onClick={() => setCurrentTab('citizen-dashboard')}
-            className="px-6 py-3 bg-slate-900 text-white text-sm font-semibold rounded-xl border border-white/10 hover:bg-slate-800 hover:border-brand-primary/30 transition-all"
+            onClick={() => handleTabNavigation(isGuest ? 'auth' : 'citizen-dashboard')}
+            className="px-8 py-4 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl border border-white/10 hover:border-indigo-500/30 transition-all cursor-pointer"
           >
             Explore Dashboard
           </button>
@@ -181,8 +210,8 @@ export default function LandingView({ setCurrentTab, kpiStats }: LandingViewProp
               </p>
             </div>
             <button 
-              onClick={() => setCurrentTab('twin')}
-              className="mt-6 flex items-center justify-center gap-1 text-xs font-semibold text-brand-primary hover:text-brand-secondary group transition-all"
+              onClick={() => handleTabNavigation('twin')}
+              className="mt-6 flex items-center justify-center gap-1 text-xs font-semibold text-brand-primary hover:text-brand-secondary group transition-all cursor-pointer"
             >
               View Interactive Map
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -199,7 +228,7 @@ export default function LandingView({ setCurrentTab, kpiStats }: LandingViewProp
             <span className="text-[10px] font-mono bg-cyan-400/15 text-cyan-400 border border-cyan-400/25 px-2.5 py-1 rounded-full uppercase tracking-wider">COMMUNITY HEALTH</span>
             <h2 className="font-display font-bold text-3xl sm:text-4xl text-white">How Community Safety is Scored</h2>
             <p className="text-gray-400 text-sm leading-relaxed">
-              Our unique **Community Safety score (${kpiStats.communityHealthScore}/100)** is calculated by combining active street issues, how fast they are solved, citizen happiness, and smart city sensors across five key areas.
+              Our unique **Community Safety score ({kpiStats.communityHealthScore}/100)** is calculated by combining active street issues, how fast they are solved, citizen happiness, and smart city sensors across five key areas.
             </p>
             <div className="space-y-3 pt-2">
               <div className="flex items-center gap-2 text-xs text-gray-300">
@@ -216,8 +245,8 @@ export default function LandingView({ setCurrentTab, kpiStats }: LandingViewProp
               </div>
             </div>
             <button 
-              onClick={() => setCurrentTab('twin')}
-              className="px-5 py-2.5 bg-slate-900 border border-white/10 hover:border-brand-primary/30 text-white rounded-xl text-xs font-semibold flex items-center gap-2 transition-all mt-4"
+              onClick={() => handleTabNavigation('twin')}
+              className="px-5 py-2.5 bg-slate-900 border border-white/10 hover:border-brand-primary/30 text-white rounded-xl text-xs font-semibold flex items-center gap-2 transition-all mt-4 cursor-pointer"
             >
               Explore Ward Areas
               <ArrowRight className="w-4 h-4" />

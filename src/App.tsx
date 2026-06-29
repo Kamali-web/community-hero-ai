@@ -26,13 +26,32 @@ import VisualInspectorView from './components/VisualInspectorView';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { db, auth, onAuthStateChanged, User, signOut } from './lib/firebase';
 import { CivicIssue, Prediction, Citizen, IssueStatus, IssueCategory } from './types';
+import { LanguageCode, TRANSLATIONS, LANGUAGES } from './utils/translations';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState('landing');
+  const [guestPage, setGuestPage] = useState<'landing' | 'auth'>('landing');
   const [userRole, setUserRole] = useState<'citizen' | 'authority' | 'child' | null>(null);
+
+  // Multilingual State and helper function
+  const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>(
+    () => (localStorage.getItem('app_lang') as LanguageCode) || 'en'
+  );
+
+  const t = (key: string, variables?: Record<string, string>) => {
+    const dict = TRANSLATIONS[currentLanguage] || TRANSLATIONS['en'];
+    let text = dict[key] || TRANSLATIONS['en'][key] || key;
+    if (variables) {
+      Object.entries(variables).forEach(([k, v]) => {
+        text = text.replace(`{${k}}`, v);
+      });
+    }
+    return text;
+  };
   
   const [user, setUser] = useState<User | null>(null);
   const [authChecking, setAuthChecking] = useState(true);
+  const [localTheme, setLocalTheme] = useState(() => localStorage.getItem('theme_mode') || 'default');
 
   const [issues, setIssues] = useState<CivicIssue[]>([]);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
@@ -375,7 +394,7 @@ export default function App() {
 
   // Synchronize global theme class on HTML element & document body
   useEffect(() => {
-    const currentTheme = userProfile?.themeMode || localStorage.getItem('theme_mode') || 'default';
+    const currentTheme = userProfile?.themeMode || localTheme || 'default';
     
     // Remove existing themes
     document.documentElement.classList.remove('theme-light', 'theme-dark', 'theme-default');
@@ -386,7 +405,7 @@ export default function App() {
     document.documentElement.classList.add(themeClass);
     document.body.classList.add(themeClass);
     localStorage.setItem('theme_mode', currentTheme);
-  }, [userProfile?.themeMode]);
+  }, [userProfile?.themeMode, localTheme]);
 
   // Load database from Server on mount or tab change (with high-quality offline cache support)
   useEffect(() => {
@@ -611,6 +630,8 @@ export default function App() {
             onEarnPoints={handleEarnPoints}
             userProfile={userProfile}
             onIssueReported={handleIssueReported}
+            currentLanguage={currentLanguage}
+            t={t}
           />
         );
 
@@ -625,6 +646,8 @@ export default function App() {
             userProfile={userProfile}
             prefilledData={prefilledReportData}
             onClearPrefilledData={() => setPrefilledReportData(null)}
+            currentLanguage={currentLanguage}
+            t={t}
           />
         );
 
@@ -656,6 +679,8 @@ export default function App() {
             onAddComment={handleAddComment}
             onUpdateStatus={handleUpdateStatus}
             setCurrentTab={setCurrentTab}
+            currentLanguage={currentLanguage}
+            t={t}
           />
         );
 
@@ -791,20 +816,91 @@ export default function App() {
         
         {/* Simple navbar for logged out user */}
         <header className="sticky top-0 z-50 glass border-b border-white/5 py-4 px-6 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => setGuestPage('landing')}>
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center glow-primary">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
             <div>
-              <h1 className="font-display font-bold text-lg tracking-wider text-white">COMMUNITY HERO <span className="text-xs px-2 py-0.5 bg-indigo-500/20 text-indigo-400 rounded-full border border-indigo-500/30">AI</span></h1>
-              <p className="text-[10px] text-gray-400 font-mono tracking-tight uppercase">Civic Intelligence Platform</p>
+              <h1 className="font-display font-black text-sm tracking-widest text-white leading-none">
+                AEGIS SHIELD <span className="text-[9px] px-1.5 py-0.5 bg-indigo-500/20 text-indigo-400 rounded-full border border-indigo-500/30 font-mono">AI</span>
+              </h1>
+              <p className="text-[9px] text-gray-500 font-mono tracking-wider uppercase mt-1">Civic Intelligence Platform</p>
             </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            {/* Theme switcher */}
+            <div className="flex items-center bg-slate-900 border border-white/5 rounded-xl p-1 gap-1 text-[10px] font-bold">
+              <button
+                onClick={() => {
+                  setLocalTheme('light');
+                  localStorage.setItem('theme_mode', 'light');
+                }}
+                className={`px-2.5 py-1 rounded transition-all cursor-pointer ${localTheme === 'light' ? 'bg-white text-slate-950 font-black shadow-sm' : 'text-gray-400 hover:text-white'}`}
+              >
+                LIGHT
+              </button>
+              <button
+                onClick={() => {
+                  setLocalTheme('dark');
+                  localStorage.setItem('theme_mode', 'dark');
+                }}
+                className={`px-2.5 py-1 rounded transition-all cursor-pointer ${localTheme === 'dark' ? 'bg-indigo-600 text-white font-black' : 'text-gray-400 hover:text-white'}`}
+              >
+                DARK
+              </button>
+              <button
+                onClick={() => {
+                  setLocalTheme('default');
+                  localStorage.setItem('theme_mode', 'default');
+                }}
+                className={`px-2.5 py-1 rounded transition-all cursor-pointer ${localTheme === 'default' ? 'bg-indigo-600 text-white font-black' : 'text-gray-400 hover:text-white'}`}
+              >
+                COSMIC
+              </button>
+            </div>
+
+            {guestPage === 'landing' ? (
+              <button 
+                onClick={() => setGuestPage('auth')}
+                className="px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 hover:text-white rounded-xl border border-indigo-500/30 text-xs font-semibold font-mono cursor-pointer transition-all"
+              >
+                SIGN IN
+              </button>
+            ) : (
+              <button 
+                onClick={() => setGuestPage('landing')}
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-gray-300 hover:text-white rounded-xl border border-white/5 text-xs font-semibold font-mono cursor-pointer transition-all"
+              >
+                HOME
+              </button>
+            )}
           </div>
         </header>
 
-        <AuthView onAuthSuccess={handleAuthSuccess} />
+        {guestPage === 'landing' ? (
+          <LandingView 
+            setCurrentTab={setCurrentTab} 
+            kpiStats={kpiStats} 
+            isGuest={true}
+            onAuthSuccess={handleAuthSuccess}
+            onGoToAuth={() => setGuestPage('auth')}
+          />
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center py-8 px-4 relative max-w-7xl mx-auto w-full">
+            <button
+              onClick={() => setGuestPage('landing')}
+              className="mb-4 flex items-center gap-2 text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors font-mono self-center cursor-pointer"
+            >
+              <span>← Back to Home Page</span>
+            </button>
+            <div className="w-full max-w-md">
+              <AuthView onAuthSuccess={handleAuthSuccess} />
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -858,6 +954,9 @@ export default function App() {
         user={user}
         userProfile={userProfile}
         onSignOut={handleSignOut}
+        currentLanguage={currentLanguage}
+        setCurrentLanguage={setCurrentLanguage}
+        t={t}
       />
 
       {/* Main Core View Area */}
@@ -871,7 +970,7 @@ export default function App() {
           <div className="flex items-center gap-2">
             <div className={`w-2.5 h-2.5 rounded-full ${getEffectiveOnlineStatus() ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500 animate-ping'}`} />
             <span>
-              STATUS: <strong className="uppercase">{getEffectiveOnlineStatus() ? 'Online (Real-Time Sync)' : 'Offline (Local Cache Sandbox)'}</strong>
+              STATUS: <strong className="uppercase">{getEffectiveOnlineStatus() ? t('status_online') : t('status_offline')}</strong>
             </span>
             {drafts.length > 0 && (
               <span className="ml-2 px-2 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded text-[10px] uppercase font-bold animate-pulse">
@@ -886,7 +985,7 @@ export default function App() {
                 disabled={isSyncingDrafts}
                 className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-850 active:scale-95 text-white rounded-lg text-[10px] uppercase font-bold transition-all flex items-center gap-1 cursor-pointer"
               >
-                {isSyncingDrafts ? 'Syncing...' : 'Sync Drafts Now 🔄'}
+                {isSyncingDrafts ? 'Syncing...' : `${t('sync_drafts')} 🔄`}
               </button>
             )}
             <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -896,7 +995,7 @@ export default function App() {
                 onChange={(e) => handleToggleOfflineSimulator(e.target.checked)}
                 className="rounded bg-slate-900 border-white/10 text-indigo-500 focus:ring-0 focus:ring-offset-0 w-3.5 h-3.5 cursor-pointer"
               />
-              <span className="text-[10px] uppercase tracking-wider text-slate-300">Simulate Offline</span>
+              <span className="text-[10px] uppercase tracking-wider text-slate-300">{t('simulate_offline')}</span>
             </label>
           </div>
         </div>

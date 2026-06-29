@@ -91,6 +91,46 @@ app.get('/api/issues/:id', (req, res) => {
   }
 });
 
+// Translation Endpoint for multilingual accessibility
+app.post('/api/translate', async (req, res) => {
+  const { text } = req.body;
+  if (!text) {
+    return res.status(400).json({ error: 'Text is required for translation' });
+  }
+
+  if (!isGeminiEnabled || !ai) {
+    console.log('Gemini not enabled, returning local heuristic mock translation.');
+    const lowerText = text.toLowerCase();
+    let mockTranslation = text;
+    if (lowerText.includes('gaddha') || lowerText.includes('kuzhi') || lowerText.includes('gundi') || lowerText.includes('pothole') || lowerText.includes('road')) {
+      mockTranslation = 'There is a severe pothole causing accidents and damaging vehicles on the main road.';
+    } else if (lowerText.includes('paani') || lowerText.includes('neer') || lowerText.includes('neeru') || lowerText.includes('water') || lowerText.includes('pipe')) {
+      mockTranslation = 'High-pressure water leakage from an underground pipeline is flooding the street.';
+    } else if (lowerText.includes('kachra') || lowerText.includes('kuppai') || lowerText.includes('kasa') || lowerText.includes('garbage') || lowerText.includes('waste')) {
+      mockTranslation = 'Large piles of uncollected garbage and industrial waste causing intense foul smell.';
+    } else {
+      mockTranslation = `[Translation]: ${text}`;
+    }
+    return res.json({ translatedText: mockTranslation });
+  }
+
+  try {
+    const prompt = `Translate the following local civic complaint text into clear, standard English for the municipal database. Report only the final English translation. Do not include any preambles, notes, quotes, or conversational phrasing.
+Complaint: "${text}"`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.5-flash',
+      contents: prompt,
+    });
+
+    const translatedText = response.text?.trim() || text;
+    res.json({ translatedText });
+  } catch (err) {
+    console.error('Gemini translation failure:', err);
+    res.json({ translatedText: `[Translation Fallback]: ${text}` });
+  }
+});
+
 // Helper: Local Smart Heuristics as fallback for Gemini Analysis
 function runLocalHeuristicAnalysis(title: string, description: string, category: IssueCategory): AIAnalysis {
   const text = (title + ' ' + description).toLowerCase();

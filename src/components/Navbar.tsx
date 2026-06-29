@@ -22,11 +22,13 @@ import {
   X,
   Compass,
   FileSpreadsheet,
-  Camera
+  Camera,
+  Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { LANGUAGES } from '../utils/translations';
 
 interface NavbarProps {
   currentTab: string;
@@ -37,6 +39,9 @@ interface NavbarProps {
   user: any;
   userProfile?: any;
   onSignOut: () => void;
+  currentLanguage: string;
+  setCurrentLanguage: (lang: any) => void;
+  t?: any;
 }
 
 export default function Navbar({ 
@@ -47,7 +52,10 @@ export default function Navbar({
   citizenPoints, 
   user, 
   userProfile,
-  onSignOut 
+  onSignOut,
+  currentLanguage,
+  setCurrentLanguage,
+  t = (k: string) => k
 }: NavbarProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -108,39 +116,39 @@ export default function Navbar({
   const getNavItems = () => {
     if (userRole === 'child') {
       return [
-        { id: 'kids-dashboard', label: 'Junior Sanctuary', icon: Sparkles, color: 'text-yellow-400' },
-        { id: 'visual-assessor', label: 'Ranger Vision AI', icon: Camera, color: 'text-indigo-400' },
-        { id: 'map', label: 'Interactive Map', icon: Map, color: 'text-indigo-400' },
-        { id: 'gpt', label: 'Junior Eco-Bot', icon: Users, color: 'text-emerald-400' },
-        { id: 'profile', label: 'Ranger Profile', icon: User, color: 'text-pink-400' },
+        { id: 'kids-dashboard', label: t('kids_sanctuary') || 'Junior Sanctuary', icon: Sparkles, color: 'text-yellow-400' },
+        { id: 'visual-assessor', label: t('ai_visual_assessor') || 'Ranger Vision AI', icon: Camera, color: 'text-indigo-400' },
+        { id: 'map', label: t('district_map') || 'Interactive Map', icon: Map, color: 'text-indigo-400' },
+        { id: 'gpt', label: t('civic_gpt') || 'Junior Eco-Bot', icon: Users, color: 'text-emerald-400' },
+        { id: 'profile', label: t('my_hero_profile') || 'Ranger Profile', icon: User, color: 'text-pink-400' },
       ];
     }
 
     if (userRole === 'authority') {
       return [
         { id: 'authority-dashboard', label: 'Authority Desk', icon: Landmark, color: 'text-cyan-400' },
-        { id: 'visual-assessor', label: 'AI Visual Assessor', icon: Camera, color: 'text-indigo-400' },
-        { id: 'map', label: 'District Map', icon: Map, color: 'text-slate-400' },
+        { id: 'visual-assessor', label: t('ai_visual_assessor') || 'AI Visual Assessor', icon: Camera, color: 'text-indigo-400' },
+        { id: 'map', label: t('district_map') || 'District Map', icon: Map, color: 'text-slate-400' },
         { id: 'predictions', label: 'Prediction Grid', icon: ShieldAlert, color: 'text-amber-500' },
-        { id: 'twin', label: 'Digital Twin', icon: Cpu, color: 'text-cyan-500' },
+        { id: 'twin', label: t('digital_twin') || 'Digital Twin', icon: Cpu, color: 'text-cyan-500' },
         { id: 'analytics', label: 'Triage Stats', icon: TrendingUp, color: 'text-emerald-400' },
-        { id: 'gpt', label: 'Administrative GPT', icon: Users, color: 'text-indigo-400' },
-        { id: 'profile', label: 'Command Profile', icon: User, color: 'text-pink-400' },
+        { id: 'gpt', label: t('civic_gpt') || 'Administrative GPT', icon: Users, color: 'text-indigo-400' },
+        { id: 'profile', label: t('my_hero_profile') || 'Command Profile', icon: User, color: 'text-pink-400' },
       ];
     }
 
     // Default: Citizen items
     return [
-      { id: 'landing', label: 'Home Page', icon: Landmark, color: 'text-gray-400' },
-      { id: 'citizen-dashboard', label: 'Citizen Feed', icon: ListTodo, color: 'text-indigo-400' },
-      { id: 'visual-assessor', label: 'AI Visual Assessor', icon: Camera, color: 'text-indigo-400 animate-pulse' },
-      { id: 'report', label: 'Report Incident', icon: ShieldAlert, color: 'text-rose-400' },
-      { id: 'map', label: 'District Map', icon: Map, color: 'text-cyan-400' },
-      { id: 'impact', label: 'Eco Sanctuary & Ledger', icon: Leaf, color: 'text-emerald-400' },
-      { id: 'gpt', label: 'CivicGPT Agent', icon: Users, color: 'text-indigo-400' },
-      { id: 'twin', label: 'Digital Twin', icon: Cpu, color: 'text-purple-400' },
-      { id: 'leaderboard', label: 'Hall of Heroes', icon: Award, color: 'text-amber-400' },
-      { id: 'profile', label: 'My Hero Profile', icon: User, color: 'text-pink-400' },
+      { id: 'landing', label: t('home_page') || 'Home Page', icon: Landmark, color: 'text-gray-400' },
+      { id: 'citizen-dashboard', label: t('citizen_feed') || 'Citizen Feed', icon: ListTodo, color: 'text-indigo-400' },
+      { id: 'visual-assessor', label: t('ai_visual_assessor') || 'AI Visual Assessor', icon: Camera, color: 'text-indigo-400 animate-pulse' },
+      { id: 'report', label: t('report_incident') || 'Report Incident', icon: ShieldAlert, color: 'text-rose-400' },
+      { id: 'map', label: t('district_map') || 'District Map', icon: Map, color: 'text-cyan-400' },
+      { id: 'impact', label: t('eco_sanctuary') || 'Eco Sanctuary & Ledger', icon: Leaf, color: 'text-emerald-400' },
+      { id: 'gpt', label: t('civic_gpt') || 'CivicGPT Agent', icon: Users, color: 'text-indigo-400' },
+      { id: 'twin', label: t('digital_twin') || 'Digital Twin', icon: Cpu, color: 'text-purple-400' },
+      { id: 'leaderboard', label: t('hall_of_heroes') || 'Hall of Heroes', icon: Award, color: 'text-amber-400' },
+      { id: 'profile', label: t('my_hero_profile') || 'My Hero Profile', icon: User, color: 'text-pink-400' },
     ];
   };
 
@@ -237,6 +245,28 @@ export default function Navbar({
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Accessibility Multilingual Selector */}
+          <div className="bg-slate-900/40 border border-white/5 rounded-2xl p-3 space-y-2">
+            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <Globe className="w-3.5 h-3.5 text-indigo-400" />
+              <span>App Language / भाषा / மொழி</span>
+            </div>
+            <select
+              value={currentLanguage}
+              onChange={(e) => {
+                setCurrentLanguage(e.target.value);
+                localStorage.setItem('app_lang', e.target.value);
+              }}
+              className="w-full bg-slate-950 border border-white/10 rounded-xl px-2.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-medium cursor-pointer"
+            >
+              {LANGUAGES.map((lang) => (
+                <option key={lang.code} value={lang.code} className="bg-slate-950 text-slate-200 text-xs">
+                  {lang.nativeName} ({lang.name})
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Navigation Links */}
@@ -384,6 +414,28 @@ export default function Navbar({
               </div>
 
               <div className="space-y-4 pt-4 border-t border-white/5">
+                {/* Mobile Language Selector */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-[9px] text-gray-500 font-mono uppercase">
+                    <Globe className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>Language / भाषा / மொழி</span>
+                  </div>
+                  <select
+                    value={currentLanguage}
+                    onChange={(e) => {
+                      setCurrentLanguage(e.target.value);
+                      localStorage.setItem('app_lang', e.target.value);
+                    }}
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-2.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-medium cursor-pointer"
+                  >
+                    {LANGUAGES.map((lang) => (
+                      <option key={lang.code} value={lang.code} className="bg-slate-950 text-slate-200 text-xs">
+                        {lang.nativeName} ({lang.name})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 {/* Station switcher */}
                 {userRole !== 'authority' ? (
                   <div className="space-y-1.5">

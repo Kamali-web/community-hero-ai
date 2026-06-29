@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { ShieldAlert, ArrowLeft, ArrowUp, Calendar, MapPin, User, CheckCircle2, MessageSquare, Sparkles, Send, Clock, RefreshCw, Mic } from 'lucide-react';
+import { ShieldAlert, ArrowLeft, ArrowUp, Calendar, MapPin, User, CheckCircle2, MessageSquare, Sparkles, Send, Clock, RefreshCw, Mic, Volume2 } from 'lucide-react';
 import { CivicIssue, Comment, IssueStatus } from '../types';
 
 interface IssueDetailsViewProps {
@@ -15,6 +15,8 @@ interface IssueDetailsViewProps {
   onAddComment: (id: string, text: string, isAuthority: boolean) => void;
   onUpdateStatus: (id: string, status: IssueStatus, department?: string) => void;
   setCurrentTab: (tab: string) => void;
+  currentLanguage?: any;
+  t?: any;
 }
 
 export default function IssueDetailsView({
@@ -24,10 +26,65 @@ export default function IssueDetailsView({
   onUpvote,
   onAddComment,
   onUpdateStatus,
-  setCurrentTab
+  setCurrentTab,
+  currentLanguage = 'en',
+  t = (k: string) => k
 }: IssueDetailsViewProps) {
   const [commentText, setCommentText] = useState('');
   const [assignedDept, setAssignedDept] = useState('');
+
+  // Audio read-aloud state for lower-literacy/uneducated users
+  const [isPlayingDetails, setIsPlayingDetails] = useState(false);
+
+  const handlePlayVoiceDetails = () => {
+    if ('speechSynthesis' in window) {
+      if (isPlayingDetails) {
+        window.speechSynthesis.cancel();
+        setIsPlayingDetails(false);
+      } else {
+        const issue = issues.find((i) => i.id === issueId);
+        if (!issue) return;
+
+        const statusText = t(`filter_${issue.status.toLowerCase().replace(' ', '')}`);
+        const textToSpeak = t('speech_detail_intro', {
+          status: statusText,
+          author: issue.reportedBy,
+          location: issue.locationName
+        }) + ". " + issue.description;
+
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        
+        const voices = window.speechSynthesis.getVoices();
+        let matchingVoice = voices.find(v => v.lang.startsWith(currentLanguage));
+        if (!matchingVoice && currentLanguage === 'hi') matchingVoice = voices.find(v => v.lang.includes('IN'));
+        if (matchingVoice) {
+          utterance.voice = matchingVoice;
+        }
+        utterance.lang = currentLanguage === 'hi' ? 'hi-IN' : currentLanguage === 'ta' ? 'ta-IN' : currentLanguage === 'kn' ? 'kn-IN' : currentLanguage === 'te' ? 'te-IN' : 'en-US';
+        utterance.rate = 0.92;
+        
+        utterance.onend = () => {
+          setIsPlayingDetails(false);
+        };
+        utterance.onerror = () => {
+          setIsPlayingDetails(false);
+        };
+        
+        setIsPlayingDetails(true);
+        window.speechSynthesis.speak(utterance);
+      }
+    } else {
+      alert('Text-to-speech is not supported in this browser.');
+    }
+  };
+
+  React.useEffect(() => {
+    return () => {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
 
   const issue = issues.find((i) => i.id === issueId);
 
@@ -124,17 +181,33 @@ export default function IssueDetailsView({
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       
       {/* Back Button and Core Header */}
-      <div className="flex items-center gap-3">
-        <button 
-          onClick={() => setCurrentTab(userRole === 'citizen' ? 'citizen-dashboard' : 'authority-dashboard')}
-          className="w-9 h-9 bg-slate-900 border border-white/10 rounded-xl flex items-center justify-center hover:bg-slate-800 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4 text-gray-300" />
-        </button>
-        <div>
-          <span className="text-[10px] text-gray-400 font-mono">INCIDENT METADATA: AUDIT #{issue.id}</span>
-          <h2 className="font-display font-bold text-xl sm:text-2xl text-white leading-tight">{issue.title}</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setCurrentTab(userRole === 'citizen' ? 'citizen-dashboard' : 'authority-dashboard')}
+            className="w-9 h-9 bg-slate-900 border border-white/10 rounded-xl flex items-center justify-center hover:bg-slate-800 transition-colors cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-300" />
+          </button>
+          <div>
+            <span className="text-[10px] text-gray-400 font-mono">INCIDENT METADATA: AUDIT #{issue.id}</span>
+            <h2 className="font-display font-bold text-xl sm:text-2xl text-white leading-tight">{issue.title}</h2>
+          </div>
         </div>
+
+        {/* Audio Read Aloud Assistance for issue description & comments */}
+        <button
+          type="button"
+          onClick={handlePlayVoiceDetails}
+          className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl border font-bold text-xs transition-all cursor-pointer shadow-md shrink-0 ${
+            isPlayingDetails
+              ? 'bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20 animate-pulse'
+              : 'bg-indigo-600/20 border-indigo-500/30 text-indigo-300 hover:bg-indigo-600/30'
+          }`}
+        >
+          <Volume2 className="w-4 h-4 animate-bounce" />
+          <span>{isPlayingDetails ? t('stop_audio') : t('button_details')}</span>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
