@@ -1,0 +1,46 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Represents a citizen's profile and accumulated hero rewards points.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Display name of the user"
+        },
+        "points": {
+          "type": "integer",
+          "description": "Hero Points balance used to plant flora, adopt fauna, or grow family"
+        },
+        "badges": {
+          "type": "array",
+          "description": "Earned civic badges"
+        },
+        "reportsCount": {
+          "type": "integer",
+          "description": "Number of issues reported"
+        },
+        "verificationsCount": {
+          "type": "integer",
+          "description": "Number of upvotes/verifications made"
+        },
+        "trustScore": {
+          "type": "integer",
+          "description": "Reputational trust metric"
+        },
+        "sanctuary": {
+          "type": "array",
+          "description": "List of active virtual sanctuary items (plants, animals, family) grown by the user"
+        }
+      },
+      "required": ["name", "points"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and sanctuary inventories"
+    }
+  }
+}

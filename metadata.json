@@ -1,0 +1,6 @@
+{
+  "name": "Community Hero AI",
+  "description": "An AI-powered Civic Intelligence Platform that empowers citizens and authorities to report, analyze, prioritize, predict, and resolve municipal infrastructure hazards proactively.",
+  "requestFramePermissions": ["geolocation", "camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
